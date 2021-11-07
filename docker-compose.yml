@@ -1,0 +1,73 @@
+version: '3'
+
+services:
+  reverse-proxy:
+    image: traefik:v2.5
+    container_name: "traefik"
+    restart: always
+    networks:
+      - "web"
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      # Configure entrypoint
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      # SSL configuration
+      # Remove for production
+      # - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      - "--certificatesresolvers.le.acme.tlschallenge=true"
+      - "--certificatesresolvers.le.acme.email=jaster.victor@gmail.com"
+      - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json"
+      # Global HTTP -> HTTPS
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      # Enable dashboard
+      - "--api.dashboard=true"
+      # Enable debugging
+      - "--log.level=DEBUG"
+      - "--api.debug=true"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # To persist certificates
+      - "./letsencrypt:/letsencrypt"
+      # So that Traefik can listen to the Docker events
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`admin.jasterv.com`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.tls.certresolver=le"
+      - "traefik.http.routers.dashboard.middlewares=auth"
+      - "traefik.http.middlewares.auth.basicauth.users=admin:$$apr1$$9TWXq2Wl$$/P5HzoXT.BJgKrNf6XbcB0"
+ 
+  jastervlog:
+    image: klakegg/hugo:0.83.1
+    restart: always
+    container_name: "jastervlog"
+    command: 
+      - "server" 
+      - "--baseUrl=https://jasterv.com" 
+      - "--disableFastRender"
+      - "--minify"
+      - "--environment=production"
+      - "--appendPort=false"
+    networks: 
+      - "web"
+    volumes:
+      - "/home/jasterv/hugo/jastervlog:/src"
+    ports:
+      - "1313:1313"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.jastervlog.rule=Host(`jasterv.com`)"
+      - "traefik.http.routers.jastervlog.entrypoints=websecure"
+      - "traefik.http.routers.jastervlog.tls.certresolver=le"
+      - "traefik.http.services.jastervlog.loadbalancer.server.port=1313"
+
+networks:
+  web:
+    external: true
