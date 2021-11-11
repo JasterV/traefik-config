@@ -4,7 +4,7 @@ My traefik proxy config
 
 ## Features
 
-* TLS/SSL
+* Enables TLS using letsencrypt
 * Exposes the Dashboard and the API using Basic Auth
 * Redirects all the HTTP traffic to HTTPS
 * Exposes an hugo site
