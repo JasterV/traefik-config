@@ -7,4 +7,5 @@ My traefik proxy config
 * Enables TLS using letsencrypt
 * Exposes the Dashboard and the API using Basic Auth
 * Redirects all the HTTP traffic to HTTPS
+* Integrates Traefik Pilot
 * Exposes an [hugo](https://gohugo.io/) site
