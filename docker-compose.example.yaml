@@ -51,12 +51,17 @@ services:
 
   watchtower:
     image: containrrr/watchtower
+    restart: always
     container_name: "watchtower"
     networks:
       - "web"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
+      - WATCHTOWER_DEBUG=true
+      - WATCHTOWER_NOTIFICATIONS_LEVEL=debug
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=300
       - WATCHTOWER_LABEL_ENABLE=true
 
   jastervlog:
