@@ -46,31 +46,31 @@ services:
       - "traefik.http.routers.dashboard.middlewares=auth"
       # Generate user:psswd pair with: 
       # echo $(htpasswd -nbB <USER> "<PASS>") | sed -e s/\\$/\\$\\$/g
-      - "traefik.http.middlewares.auth.basicauth.users=<USER>:<ENCRYPTED-PASSWORD>"
- 
-  jastervlog:
-    image: klakegg/hugo:0.83.1
-    restart: always
-    container_name: "jastervlog"
-    command: 
-      - "server" 
-      - "--baseUrl=https://<YOUR-DOMAIN>" 
-      - "--disableFastRender"
-      - "--minify"
-      - "--environment=production"
-      - "--appendPort=false"
-    networks: 
+      - "traefik.http.middlewares.auth.basicauth.users=<USER>:<ENCRYPTED-PASSWO\
+        RD>"
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: "watchtower"
+    networks:
       - "web"
     volumes:
-      - "/home/jasterv/apps/jastervlog:/src"
-    ports:
-      - "1313:1313"
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_LABEL_ENABLE=true
+
+  jastervlog:
+    image: jasterv/jastervlog:main
+    restart: always
+    container_name: "jastervlog"
+    networks:
+      - "web"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.jastervlog.rule=Host(`<YOUR-DOMAIN>`)"
+      - "traefik.http.routers.jastervlog.rule=Host(`jasterv.com`)"
       - "traefik.http.routers.jastervlog.entrypoints=websecure"
       - "traefik.http.routers.jastervlog.tls.certresolver=le"
-      - "traefik.http.services.jastervlog.loadbalancer.server.port=1313"
+      - "com.centurylinklabs.watchtower.enable=true"
 
 networks:
   web:
